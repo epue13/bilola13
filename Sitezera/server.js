@@ -9,7 +9,12 @@ app.use(express.json());
 // Servir arquivos estáticos (Dashboard HTML)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Estado em memória RAM (Persiste pois o Render não desliga o Web Service)
+// Rota principal carrega o Dashboard
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Estado em memória RAM
 let jobIdsQueue = [];
 let activeBots = {};
 
@@ -40,7 +45,6 @@ app.get('/api/jobids/pop', (req, res) => {
         return res.json({ success: false, jobId: null, message: "Fila vazia!" });
     }
     
-    // Pega 1 aleatório dos 15 primeiros pra evitar colisão entre bots simultâneos
     const maxIdx = Math.min(15, jobIdsQueue.length);
     const pickIdx = Math.floor(Math.random() * maxIdx);
     const chosenJobId = jobIdsQueue.splice(pickIdx, 1)[0];
@@ -48,7 +52,7 @@ app.get('/api/jobids/pop', (req, res) => {
     res.json({ success: true, jobId: chosenJobId, remaining: jobIdsQueue.length });
 });
 
-// 3. Heartbeat & Mudança de Status ("Vou Hoppar", "Ativo", etc)
+// 3. Heartbeat & Mudança de Status
 app.post('/api/heartbeat', (req, res) => {
     const { botName, status } = req.body;
     
